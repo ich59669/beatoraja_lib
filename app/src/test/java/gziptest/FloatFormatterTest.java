@@ -20,7 +20,9 @@ import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -30,6 +32,30 @@ class FloatFormatterTest {
     private final int DECIMALPOINT = 12;
     private final int REVERSEZERO = 10;
 
+    @TestFactory
+    Stream<DynamicNode> constructorTestCase8() {
+        return IntStream.range(1,16).boxed()
+        .map(inum -> dynamicContainer("iketa: " + inum, IntStream.range(1, 16 - inum).boxed()
+            .map(fnum -> dynamicTest("iketa: " + inum + ",fketa: " + fnum, () -> {
+                FloatFormatter ff = new FloatFormatter(inum.intValue(), fnum.intValue(), 1, 0);
+                int[] d = new int[inum.intValue()+fnum.intValue()+3];
+                Arrays.fill(d, -1);
+                assertArrayEquals(ff.getDigits(), d);
+            }))));
+    }
+    
+
+    @TestFactory
+    Stream<DynamicNode> testA() {
+        return IntStream.range(-100, 100).boxed()
+        .map(inum -> dynamicTest("f:15, i:" + inum, () -> {
+            FloatFormatter ff = new FloatFormatter(inum, 15, 1, 0);
+            int[] d = new int[18];
+            Arrays.fill(d, -1);
+            assertArrayEquals(ff.getDigits(), d);
+        }
+        ));
+    }
 
     @ParameterizedTest
     @ValueSource(ints = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, Integer.MAX_VALUE})

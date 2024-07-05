@@ -43,8 +43,7 @@ public final class FloatFormatter {
         if (tempiketa >= 15 || tempfketa >= 15 || tempiketa + tempfketa >= 15) {
             this.fketa = (tempfketa < 15) ? tempfketa : 15;
             this.iketa = 15 - this.fketa;
-        }
-        else {
+        } else {
             this.iketa = tempiketa;
             this.fketa = tempfketa;
         }
@@ -58,44 +57,54 @@ public final class FloatFormatter {
         if (this.digits.length == 1) {
             return this.digits; // 空定義用
         }
-        int ival = (int) value;
-        if (this.zeropadding == 0) { // 整数桁数算出
-            this.base = Math.min(this.iketa + this.sign, (int) Math.log10((ival != 0) ? ival : 1) + 1);
-        }
-        int nowketa;
-        if (this.iketa == 0 && this.sign == 1) {
+        Arrays.fill(this.digits, -1);
+        if (this.iketa == 0 && this.fketa == 0 && this.sign == 1) {
             this.digits[1] = SIGNSYMBOL;
-        } else {
-            nowketa = this.base;
-            this.digits[nowketa] = ival % 10; // 1桁目は裏ゼロにしない
-            ival = ival / 10;
-            nowketa--;
-            while (1 <= nowketa) {
-                if (ival != 0) {
-                    this.digits[nowketa] = ival % 10;
-                    ival = ival / 10;
-                } else {
-                    if (nowketa == 1) {
-                        this.digits[nowketa] = SIGNSYMBOL;
-                    } else if (this.zeropadding == 1) {
-                        this.digits[nowketa] = 0;
-                    } else {
-                        this.digits[nowketa] = REVERSEZERO;
-                    }
-                }
-                nowketa--;
-            }
-
+            return this.digits; // 符号のみ用
         }
-        if (this.fketa != 0) {
-            this.digits[this.base + 1] = DECIMALPOINT;
-            int fval = (int)Math.round(value * Math.pow(10, this.fketa));
-            nowketa = this.digits.length - 1;
-            while (this.base + 1 < nowketa) {
-                this.digits[nowketa] = fval % 10;
-                fval = fval / 10;
-                nowketa--;
+
+        boolean isSign;
+        isSign = (this.sign == 1) && (value < Math.pow(10, this.iketa));
+        if (this.zeropadding == 0) { // 整数桁数算出
+            int ival = (int) value;
+            this.base = Math.min(this.iketa, (int) Math.log10((ival != 0) ? ival : 1) + 1) + this.sign;
+        }
+        long fval = (long) (value * Math.pow(10, this.fketa)); // % (long) Math.pow(10, this.base + this.fketa);
+        int nowketa;
+        if (this.iketa == 0) {
+            nowketa = this.fketa + this.sign + 1;
+        } else {
+            nowketa = this.base + this.fketa + ((this.fketa != 0) ? 1 : 0);
+        }
+        int fcnt = this.fketa;
+        while (nowketa > this.sign) {
+            if (fcnt > -1) {
+                digits[nowketa] = (int) (fval % 10);
+            } else {
+                if (fval == 0 && this.zeropadding == 2) {
+                    digits[nowketa] = REVERSEZERO;
+                } else {
+                    digits[nowketa] = (int) (fval % 10);
+                }
             }
+            fcnt--;
+            if (fcnt == 0) {
+                nowketa--;
+                digits[nowketa] = DECIMALPOINT;
+            }
+            fval /= 10;
+            nowketa--;
+        }
+        if (nowketa == 1) {
+            if (isSign) {
+                digits[1] = SIGNSYMBOL;
+            } else {
+                digits[1] = (int) (fval % 10);
+            }
+        }
+
+        if (this.iketa == 0 && this.sign == 1) {
+            digits[1] = SIGNSYMBOL;
         }
 
         return this.digits;
